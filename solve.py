@@ -279,7 +279,12 @@ def mod_reduce(x, m, b):
 def mod_add(x, y, m, b):
     """Algorithm 2.7. x and y are nums (any sign), m is a mag != [0]. Returns the num (x + y) mod m in [0, m).
     Reduce x and y first, then z' = x + y, and subtract m once if z' >= m."""
-    ...
+    xr = mod_reduce(x, m, b)                       #      reduce first: 0 <= x', y' < m
+    yr = mod_reduce(y, m, b)
+    z = add_mag(xr[1], yr[1], b)                   # 1.1  z' <- x' + y'  (lies in [0, 2m - 1))
+    if (len(z), z[::-1]) >= (len(m), m[::-1]):     # 2.1  z' >= m: subtract m once
+        z = sub_mag(z, m, b)
+    return (1, z)                                  # 2.2
 
 # ---- Algorithm 2.8 (Modular subtraction) -------------------------
 def mod_sub(x, y, m, b):
