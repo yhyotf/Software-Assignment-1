@@ -202,7 +202,59 @@ def ext_euclid(x, y, b):
     work on |x| and |y|, get q and r from divmod_mag, update the coefficients with the signed mul and sub,
     and fix the signs of u and v at the end (steps 3.2, 3.3).
     Check: ext_euclid(96, 40) -> d = 8, u = -2, v = 5."""
-    ...
+    x_sign,x_mag = x 
+    y_sign,y_mag = y # We separate the signs and magnitudes of x and y into separate variables
+
+    a = x_mag[:]
+    c = y_mag[:] # We now make clones of the magnitudes as to not affect the real magnitudes
+
+    u1,u2 = (1,[1]),(1,[0])
+    v1,v2 = (1,[0]),(1,[1]) # We set the values of u1,u2,v1,v2.
+
+    while c != [0]: 
+        q,r = divmod_mag(a,c,b) #Obtain quotient and remainder through division
+        a,c = c,r # Replace (a, c) with (c, r): the gcd stays the same
+
+        qu2 = mul_mag_school(q,u2[1],b) # Multiply q and magnitude of u2
+        while len(qu2)>1 and qu2[-1]==0: 
+            qu2.pop() # Removing extra 0's from the ends
+        
+        qv2 = mul_mag_school(q,v2[1],b)
+        while len(qv2)>1 and qv2[-1]==0:
+            qv2.pop() # Removing extra 0's from the ends
+        
+        if qu2 ==[0]:
+            qu2 = (1,qu2) 
+        else:
+            qu2 = (u2[0], qu2) # Here is a check to ensure if the magnitude is 0, it can not be -0. Otherwise the value will have its original sign
+        
+        if qv2 ==[0]:
+            qv2 = (1,qv2) 
+        else:
+            qv2 = (v2[0], qv2) # Here is a check to ensure if the magnitude is 0, it can not be -0. Otherwise the value will have its original sign
+
+        u3 = sub(u1,qu2,b) # Here we do the part u3 = u1 - qu2
+        v3 = sub(v1,qv2,b) # Here we do the part v3 = v1 - qv2
+
+        u1,u2 = u2,u3
+        v1,v2 = v2,v3
+
+    d = (1,a) # The gcd must be positive
+
+    if x_sign < 0 and u1[1] != [0]:
+        u = (-u1[0], u1[1])
+    else:
+        u = u1 # The loop worked on |x|, so if x was negative, we flip the sign of its coefficient
+    
+    if y_sign < 0 and v1[1] != [0]:
+        v = (-v1[0], v1[1])
+    else:
+        v = v1 # The loop worked on |y|, so if y was negative, we flip the sign of its coefficient
+
+    return d,u,v
+    
+        
+    
 
 
 # ===============================================================
@@ -227,7 +279,12 @@ def mod_reduce(x, m, b):
 def mod_add(x, y, m, b):
     """Algorithm 2.7. x and y are nums (any sign), m is a mag != [0]. Returns the num (x + y) mod m in [0, m).
     Reduce x and y first, then z' = x + y, and subtract m once if z' >= m."""
-    ...
+    xr = mod_reduce(x, m, b)                       #      reduce first: 0 <= x', y' < m
+    yr = mod_reduce(y, m, b)
+    z = add_mag(xr[1], yr[1], b)                   # 1.1  z' <- x' + y'  (lies in [0, 2m - 1))
+    if (len(z), z[::-1]) >= (len(m), m[::-1]):     # 2.1  z' >= m: subtract m once
+        z = sub_mag(z, m, b)
+    return (1, z)                                  # 2.2
 
 # ---- Algorithm 2.8 (Modular subtraction) -------------------------
 def mod_sub(x, y, m, b):
@@ -306,7 +363,7 @@ def solve_exercise(exercise_location: str, answer_location: str):
             results = {"answer": mul_school(x, y, b)}
         elif op == "multiplication_karatsuba":
             results = {"answer": mul_karatsuba(x, y, b)}
-        elif op == "extended_euclidean_algorithm":  # extended_euclidean_algorithm
+        elif op == "extended_euclidean_algorithm":
             results = {"answer": ext_euclid(x, y, b)}
     else:  # modular_arithmetic
         m = operands["modulus"][1]                 # the modulus is never negative
