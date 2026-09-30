@@ -10,7 +10,7 @@
 # Author names and student IDs:
 # Yahya Outifa (2247127) 
 # Aly Elakkad (2272121)
-# author_name_3 (author_student_ID_3)
+# Spyros Katsileros (2113325)
 # author_name_4 (author_student_ID_4)
 ##
 
@@ -18,27 +18,6 @@
 import json
 DIGITS = "0123456789ABCDEF"
 
-def strip(a):
-    while len(a) > 1 and a[-1] == 0:
-        a.pop()
-    return a
-
-def make_num(sign, mag):
-    mag = strip(mag)
-    if mag == [0]:
-        sign = 1
-    return (sign, mag)
-
-def parse(s):
-    sign = 1
-    if s[0] == "-":
-        sign, s = -1, s[1:]
-    return make_num(sign, [DIGITS.index(ch) for ch in reversed(s)])
-
-def to_string(num):
-    sign, mag = num
-    s = "".join(DIGITS[d] for d in reversed(mag))
-    return "-" + s if sign < 0 else s
 
 def addition(x, y, b): 
     m, n = len(x), len(y)
@@ -58,33 +37,90 @@ def addition(x, y, b):
         return z
 
 
-# ---- Algorithm 1.2 (Addition) ----------------------------------
+# ---- Algorithm 1.2 (Addition), for x, y in N -------------------
 def add_mag(x, y, b):
     """Algorithm 1.2, steps 1.1 - 3.2. x and y are mags (x, y in N), any lengths.
     Returns the mag x + y. Pad the shorter one with zeros (steps 1.2, 1.3); the carry is 0 or 1;
     a leftover carry becomes a new top digit (step 3.1)."""
-    ...
+    m, n = len(x), len(y)
+    c = 0                                          # 1.1
+    x = x + [0] * (max(m, n) - m)                  # 1.2  x_i <- 0 for m <= i < max{m,n}
+    y = y + [0] * (max(m, n) - n)                  # 1.3  y_i <- 0 for n <= i < max{m,n}
+    z = [0] * max(m, n)
+    for i in range(max(m, n)):                     # 2.1
+        z[i] = x[i] + y[i] + c                     # 2.2
+        if z[i] >= b:                              # 2.3
+            z[i] = z[i] - b
+            c = 1
+        else:
+            c = 0
+    if c == 1:                                     # 3.1
+        k = max(m, n) + 1
+        z.append(1)                                #      z_{k-1} = 1
+    else:
+        k = max(m, n)
+    return z[:k]                                   # 3.2
 
-# ---- Algorithm 1.3 (Subtraction) -------------------------------
+# ---- Algorithm 1.3 (Subtraction), for x > y in N ---------------
 def sub_mag(x, y, b):
     """Algorithm 1.3, steps 1.1 - 3.3. x and y are mags with x >= y.
     Returns the mag x - y WITHOUT leading zeros (step 3.2 removes them; the result of 100 - 99 is [1])."""
-    ...
+    m, n = len(x), len(y)
+    c = 0                                          # 1.1
+    y = y + [0] * (m - n)                          # 1.2  y_i <- 0 for n <= i < m
+    z = [0] * m
+    for i in range(m):                             # 2.1
+        z[i] = x[i] - y[i] - c                     # 2.2
+        if z[i] < 0:                               # 2.3
+            z[i] = z[i] + b
+            c = 1
+        else:
+            c = 0
+    k = m                                          # 3.1
+    while k >= 2 and z[k - 1] == 0:                # 3.2
+        k = k - 1
+    return z[:k]                                   # 3.3
 
-# ---- Signed addition and subtraction (the text around 1.2 and 1.3) ----
+# ---- Signed addition and subtraction (the text around 1.2 / 1.3) ----
 def add(x, y, b):
     """Signed addition of two nums. Returns a num.
     Follow the text of the notes: addition of 0 is trivial; two positives or two negatives -> add_mag and
     keep the sign; a positive and a negative -> subtraction of the two magnitudes (larger minus smaller)
     with the sign of the larger. Equal magnitudes with different signs -> (1, [0])."""
-    ...
+    sx, mx = x
+    sy, my = y
+    if mx == [0]:                                  # "Addition of 0 is trivial."
+        return y
+    if my == [0]:
+        return x
+    if sx == sy:                                   # two positives: Alg. 1.2
+        return (sx, add_mag(mx, my, b))            # two negatives: Alg. 1.2, "adjusting the sign of the output"
+    # a positive and a negative number: "equivalent to subtraction of two positive numbers"
+    if mx == my:
+        return (1, [0])
+    if (len(mx), mx[::-1]) > (len(my), my[::-1]):  # |x| > |y|
+        return (sx, sub_mag(mx, my, b))            # Alg. 1.3, sign of the larger
+    return (sy, sub_mag(my, mx, b))                # "swapping the two numbers and adjusting the sign"
 
 def sub(x, y, b):
     """Signed subtraction x - y of two nums. Returns a num.
     Follow the text of the notes: subtraction of 0 or from 0 is trivial; different signs -> add the
     magnitudes; equal signs -> subtract the magnitudes, swapping them and adjusting the sign when
     |x| < |y|. Do not just call add(x, neg(y))."""
-    ...
+    sx, mx = x
+    sy, my = y
+    if my == [0]:                                  # "Subtraction of 0 or from 0 is trivial."
+        return x
+    if mx == [0]:
+        return (-sy, my)
+    if sx != sy:                                   # positive and negative: "addition of two positive numbers,
+        return (sx, add_mag(mx, my, b))            #  and adjusting the sign of the output"
+    # two positives, or two negatives: "subtraction of two positive numbers and adjusting the sign"
+    if mx == my:
+        return (1, [0])
+    if (len(mx), mx[::-1]) > (len(my), my[::-1]):  # |x| > |y|
+        return (sx, sub_mag(mx, my, b))            # Alg. 1.3
+    return (-sx, sub_mag(my, mx, b))               # swap the two numbers, adjust the sign
 
 # ---- Algorithm 1.4 (Naive multiplication) -----------------------
 def mul_mag_school(x, y, b):
@@ -92,7 +128,20 @@ def mul_mag_school(x, y, b):
     Returns the mag x * y. Two deviations from the printed notes (they drop the top word):
     allocate m + n words in 1.1, and in 3.1 the output length k is m + n - 1 if the top word is 0, else m + n.
     (A zero factor may give leading zeros; make_num in mul_school cleans them up.)"""
-    ...
+    m, n = len(x), len(y)
+    z = [0] * (m + n)                              # 1.1  z_i <- 0 (m + n words, see above)
+    for i in range(m):                             # 2.1
+        c = 0                                      # 2.2
+        for j in range(n):                         # 2.3
+            t = z[i + j] + x[i] * y[j] + c         # 2.4  at most (b-1) + (b-1)^2 + (b-1) = b^2 - 1
+            c = t // b                             # 2.5  the carry is the top digit of t
+            z[i + j] = t - c * b                   # 2.6  keep the bottom digit
+        z[i + n] = c                               # 2.7
+    if z[m + n - 1] == 0:                          # 3.1
+        k = m + n - 1
+    else:
+        k = m + n
+    return z[:k]                                   # 3.2
 
 def mul_school(x, y, b):
     """Signed multiplication with the primary school method. x, y are nums, returns a num.
@@ -118,7 +167,26 @@ def divmod_mag(x, y, b):
     """Algorithm 1.6, steps 1.1 - 3.2. x and y are mags, y != [0]. Returns (q, r), both mags without leading
     zeros, with x = q*y + r and 0 <= r < y. Find each q_i by subtracting y*b^i from r while it fits.
     Also correct for x < y (q = [0], r = x). Needed by the extended Euclidean algorithm."""
-    ...
+    r = x[:]                                       # 1.1  r <- x (a copy without leading zeros, so the
+    while len(r) > 1 and r[-1] == 0:               #      comparisons below can look at the length first)
+        r.pop()
+    if (len(r), r[::-1]) < (len(y), y[::-1]):      #      x < y: q = 0 and r = x
+        return [0], r
+    k = len(r) - len(y) + 1                        # 1.2
+    q = [0] * k
+    for i in range(k - 1, -1, -1):                 # 2.1
+        # 2.2 - 2.3: q_i is how often y*b^i fits in r; subtract it that often. y*b^i is y shifted i
+        # places, so only the digits of r from position i upwards (r div b^i) take part.
+        top = r[i:]
+        while len(top) > 1 and top[-1] == 0:
+            top.pop()
+        while (len(top), top[::-1]) >= (len(y), y[::-1]):   # fits at most b - 1 times
+            top = sub_mag(top, y, b)
+            q[i] = q[i] + 1
+        r = r[:i] + top                            #      r <- r - q_i*b^i*y
+    while len(q) > 1 and q[-1] == 0:               # 3.1  remove leading zeros from q
+        q.pop()
+    return q, r                                    # 3.2
 
 # ---- Algorithm 2.2 (Extended Euclidean Algorithm) ---------------
 def ext_euclid(x, y, b):
@@ -141,10 +209,13 @@ def mod_reduce(x, m, b):
     Returns a num y with 0 <= y < m and y = x (mod m). Work on |x|: for i = k-n down to 0 subtract m*b^i
     while it fits; for a negative x with a non-zero remainder x', the result is m - x' (step 3.1).
     Also correct for m = [1] (result 0)."""
-    ...
-
-# The course assumes reduced inputs for Algorithms 2.7 - 2.9; the assignment allows any integer,
-# so each of them first reduces x and y with mod_reduce.
+    sx, mx = x
+    # 1.1 - 2.2  Work on |x|: for i = k-n down to 0, subtract m*b^i while it fits. That is exactly the
+    #            loop of Algorithm 1.6 without keeping the quotient, so divmod_mag does it for us.
+    _, r = divmod_mag(mx, m, b)
+    if sx < 0 and r != [0]:                        # 3.1  -x' = m - x' (mod m)
+        r = sub_mag(m, r, b)
+    return (1, r)                                  # 3.2
 
 # ---- Algorithm 2.7 (Modular addition) ----------------------------
 def mod_add(x, y, m, b):
@@ -156,13 +227,21 @@ def mod_add(x, y, m, b):
 def mod_sub(x, y, m, b):
     """Algorithm 2.8. x and y are nums (any sign), m is a mag != [0]. Returns the num (x - y) mod m in [0, m).
     Reduce x and y first, then z' = x - y, and add m once if z' < 0."""
-    ...
+    xr = mod_reduce(x, m, b)                       #      reduce first: 0 <= x', y' < m
+    yr = mod_reduce(y, m, b)
+    z = sub(xr, yr, b)                             # 1.1  z' <- x' - y'  (lies in (-m, m))
+    if z[0] < 0:                                   # 2.1  z' < 0: add m once
+        z = add(z, (1, m), b)
+    return z                                       # 2.2
 
 # ---- Algorithm 2.9 (Modular multiplication, naive) ----------------
 def mod_mul(x, y, m, b):
     """Algorithm 2.9. x and y are nums (any sign), m is a mag != [0]. Returns the num (x * y) mod m in [0, m).
     Reduce x and y first, multiply with any multiplication method, then reduce the product."""
-    ...
+    xr = mod_reduce(x, m, b)                       #      reduce first: the product then has at most
+    yr = mod_reduce(y, m, b)                       #      twice as many digits as m
+    z = mul_mag_school(xr[1], yr[1], b)            # 1.1  z' <- x' * y'  (primary school, Algorithm 1.4)
+    return mod_reduce((1, z), m, b)                # 2.1  z <- z' mod m  (Algorithm 2.5)
 
 # ---- Algorithm 2.11 (Modular inversion) ---------------------------
 def mod_inverse(x, m, b):
@@ -171,49 +250,82 @@ def mod_inverse(x, m, b):
     Watch out: as printed, the algorithm can return a NEGATIVE coefficient (the inverse of 3 mod 7 comes out
     as -2, the answer is 5), so add m when needed. Decide and test the edge cases: x = 0, x a multiple of m,
     and m = [1] (every x is invertible, the answer is 0)."""
-    ...
+    a = mod_reduce(x, m, b)[1]                     #      the notes assume 0 <= a < m, so reduce x first
+    mm = m                                         # 1.1  a' <- a, m' <- m  (a and mm below)
+    x1, x2 = (1, [1]), (1, [0])                    # 1.2
+    # Invariant: a' = x1*a (mod m) and m' = x2*a (mod m). The loop ends with a' = gcd(a, m).
+    while mm != [0]:                               # 2.1
+        q, r = divmod_mag(a, mm, b)                # 2.2  q = a' div m', r = a' - q*m'
+        a, mm = mm, r                              # 2.3
+        qx2 = mul_mag_school(q, x2[1], b)          # 2.4  x3 <- x1 - q*x2 (q >= 0, so q*x2 has the sign of x2)
+        x3 = sub(x1, (x2[0], qx2), b)
+        x1, x2 = x2, x3                            # 2.5
+    if a == [1]:                                   # 3.1  gcd = 1: the inverse is x1, but x1 can be negative
+        return mod_reduce(x1, m, b)                #      (3 mod 7 gives -2), so bring it into [0, m)
+    return None                                    # 3.2  gcd != 1: no inverse (written as null)
 
 
-# ===============================================================
-# SOLVING AN EXERCISE
-# ===============================================================
 def solve_exercise(exercise_location: str, answer_location: str):
     with open(exercise_location, "r") as exercise_file:
         exercise = json.load(exercise_file)
 
     b = exercise["radix"]
     op = exercise["operation"]
-    x = parse(exercise["x"])
 
+    # Strings -> nums. The digits already are radix b digits, so we only map them to numbers and
+    # reverse them (least significant first). Done once for every operand the exercise has.
+    operands = {}
+    for key in ("x", "y", "modulus"):
+        if key in exercise:
+            s = exercise[key]
+            sign = 1
+            if s[0] == "-":
+                sign, s = -1, s[1:]
+            mag = [DIGITS.index(ch) for ch in reversed(s)]
+            while len(mag) > 1 and mag[-1] == 0:   # remove leading zeros
+                mag.pop()
+            if mag == [0]:
+                sign = 1                           # never -0
+            operands[key] = (sign, mag)
+    x = operands["x"]
+
+    # results: answer key -> num (None = undefined, written as null)
     if exercise["type"] == "integer_arithmetic":
-        y = parse(exercise["y"])
+        y = operands["y"]
         if op == "addition":
-            answer = {"answer": to_string(add(x, y, b))}
+            results = {"answer": add(x, y, b)}
         elif op == "subtraction":
-            answer = {"answer": to_string(sub(x, y, b))}
+            results = {"answer": sub(x, y, b)}
         elif op == "multiplication_primary":
-            answer = {"answer": to_string(mul_school(x, y, b))}
+            results = {"answer": mul_school(x, y, b)}
         elif op == "multiplication_karatsuba":
-            answer = {"answer": to_string(mul_karatsuba(x, y, b))}
+            results = {"answer": mul_karatsuba(x, y, b)}
         else:  # extended_euclidean_algorithm
             raise NotImplementedError("extended_euclidean_algorithm still to do")
     else:  # modular_arithmetic
-        m = parse(exercise["modulus"])[1]          # the modulus is never negative
+        m = operands["modulus"][1]                 # the modulus is never negative
         if m == [0]:
-            answer = {"answer": None}              # modulus 0: undefined (also for inversion)
+            results = {"answer": None}             # modulus 0: undefined (also for inversion)
         elif op == "reduction":
-            answer = {"answer": to_string(mod_reduce(x, m, b))}
+            results = {"answer": mod_reduce(x, m, b)}
         elif op == "addition":
-            y = parse(exercise["y"])
-            answer = {"answer": to_string(mod_add(x, y, m, b))}
+            results = {"answer": mod_add(x, operands["y"], m, b)}
         elif op == "subtraction":
-            y = parse(exercise["y"])
-            answer = {"answer": to_string(mod_sub(x, y, m, b))}
+            results = {"answer": mod_sub(x, operands["y"], m, b)}
         elif op == "multiplication":
-            y = parse(exercise["y"])
-            answer = {"answer": to_string(mod_mul(x, y, m, b))}
+            results = {"answer": mod_mul(x, operands["y"], m, b)}
         else:  # inversion
-            raise NotImplementedError("inversion still to do")
+            results = {"answer": mod_inverse(x, m, b)}   # None (no inverse) is written as null
+
+    # nums -> strings: reverse the digits back, map them to characters, put the sign in front.
+    answer = {}
+    for key, num in results.items():
+        if num is None:
+            answer[key] = None
+        else:
+            sign, mag = num
+            s = "".join(DIGITS[d] for d in reversed(mag))
+            answer[key] = "-" + s if sign < 0 else s
 
     with open(answer_location, "w") as answer_file:
         json.dump(answer, answer_file, indent=4)
