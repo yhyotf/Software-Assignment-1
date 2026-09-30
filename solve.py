@@ -359,7 +359,8 @@ def solve_exercise(exercise_location: str, answer_location: str):
         elif op == "multiplication_karatsuba":
             results = {"answer": mul_karatsuba(x, y, b)}
         else:  # extended_euclidean_algorithm
-            results = {"answer": ext_euclid(x,y,b)}
+            d, u, v = ext_euclid(x, y, b)
+            results = {"answer-a": u, "answer-b": v, "answer-gcd": d}
     else:  # modular_arithmetic
         m = operands["modulus"][1]                 # the modulus is never negative
         if m == [0]:
