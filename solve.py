@@ -19,43 +19,45 @@ import json
 
 
 
-def solve_exercise(exercise_location : str, answer_location : str):
-    """
-    solves an exercise specified in the file located at exercise_location and
-    writes the answer to a file at answer_location. Note: the file at
-    answer_location might not exist yet and, hence, might still need to be created.
-    """
-    
-    # Open file at exercise_location for reading.
+def solve_exercise(exercise_location: str, answer_location: str):
     with open(exercise_location, "r") as exercise_file:
-        # Deserialize JSON exercise data present in exercise_file to corresponding Python exercise data 
         exercise = json.load(exercise_file)
-        
 
-    ### Parse and solve ###
+    r = exercise["radix"]
+    x = parse(exercise["x"])
+    op = exercise["operation"]
 
-    # Check type of exercise
     if exercise["type"] == "integer_arithmetic":
-        # Check what operation within the integer arithmetic operations we need to solve
-        if exercise["operation"] == "addition":
-            # Solve integer arithmetic addition exercise
-            pass
-        elif exercise["operation"] == "subtraction":
-            # Solve integer arithmetic subtraction exercise
-            pass
-        # et cetera
-    else: # exercise["type"] == "modular_arithmetic"
-        # Check what operation within the modular arithmetic operations we need to solve
-        if exercise["operation"] == "reduction":
-            # Solve modular arithmetic reduction exercise
-            pass
-        # et cetera
+        y = parse(exercise["y"])
+        if op == "addition":
+            answer = {"answer": to_string(add(x, y, r))}
+        elif op == "subtraction":
+            answer = {"answer": to_string(sub(x, y, r))}
+        elif op == "multiplication_primary":
+            answer = {"answer": to_string(mul_school(x, y, r))}
+        elif op == "multiplication_karatsuba":
+            answer = {"answer": to_string(mul_karatsuba(x, y, r))}
+        else:  # extended_euclidean_algorithm
+            raise NotImplementedError("EEA still to do")
+    else:  # modular_arithmetic
+        m = parse(exercise["modulus"])[1]         # modulus is never negative
+        if m == [0]:
+            answer = {"answer": None}             # modulus 0: undefined
+        elif op == "reduction":
+            answer = {"answer": to_string(mod_reduce(x, m, r))}
+        elif op == "addition":
+            y = parse(exercise["y"])
+            answer = {"answer": to_string(mod_add(x, y, m, r))}
+        elif op == "subtraction":
+            y = parse(exercise["y"])
+            answer = {"answer": to_string(mod_sub(x, y, m, r))}
+        elif op == "multiplication":
+            y = parse(exercise["y"])
+            answer = {"answer": to_string(mod_mul(x, y, m, r))}
+        else:  # inversion
+            raise NotImplementedError("inversion needs the EEA, still to do")
 
-
-    # Open file at answer_location for writing, creating the file if it does not exist yet
-    # (and overwriting it if it does already exist).
     with open(answer_location, "w") as answer_file:
-        # Serialize Python answer data (stored in answer) to JSON answer data and write it to answer_file
         json.dump(answer, answer_file, indent=4)
 
 # You can call your function from here
