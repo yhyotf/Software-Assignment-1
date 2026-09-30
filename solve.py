@@ -306,8 +306,8 @@ def solve_exercise(exercise_location: str, answer_location: str):
             results = {"answer": mul_school(x, y, b)}
         elif op == "multiplication_karatsuba":
             results = {"answer": mul_karatsuba(x, y, b)}
-        else:  # extended_euclidean_algorithm
-            raise NotImplementedError("extended_euclidean_algorithm still to do")
+        elif op == "extended_euclidean_algorithm":  # extended_euclidean_algorithm
+            results = {"answer": ext_euclid(x, y, b)}
     else:  # modular_arithmetic
         m = operands["modulus"][1]                 # the modulus is never negative
         if m == [0]:
@@ -320,7 +320,7 @@ def solve_exercise(exercise_location: str, answer_location: str):
             results = {"answer": mod_sub(x, operands["y"], m, b)}
         elif op == "multiplication":
             results = {"answer": mod_mul(x, operands["y"], m, b)}
-        else:  # inversion
+        elif op == "inversion":  # inversion
             results = {"answer": mod_inverse(x, m, b)}   # None (no inverse) is written as null
 
     # nums -> strings: reverse the digits back, map them to characters, put the sign in front.
@@ -338,4 +338,4 @@ def solve_exercise(exercise_location: str, answer_location: str):
 
 
 if __name__ == '__main__':
-    solve_exercise('Simple/Exercises/exercise0.json', 'Simple/MyAnswers/answer0.json')
+    solve_exercise('Simple/Exercises/exercise7.json', 'Simple/MyAnswers/answer0.json')
