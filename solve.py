@@ -5,7 +5,7 @@
 #
 #
 # Group number:
-# group_number 
+# 49
 #
 # Author names and student IDs:
 # Yahya Outifa (2247127) 
@@ -17,25 +17,7 @@
 # Import built-in json library for handling input/output 
 import json
 DIGITS = "0123456789ABCDEF"
-
-
-def addition(x, y, b): 
-    m, n = len(x), len(y)
-    z, c =  [], 0
-    x = x + [0] * (max(m, n) - m)                  # step 1.2: x_i ← 0 for m ≤ i < max{m,n}
-    y = y + [0] * (max(m, n) - n)                 # step 1.2: y_i ← 0 for n ≤ i < max{m,n}
-    for i in range(max(m, n)):                     
-        zi = x[i] + y[i] + c                            
-        if zi >= b:
-            zi -= b
-            c = 1
-        else:
-            c = 0
-        z.append(zi)
-        if c == 1:
-            z.append(1)                            
-        return z
-
+KARATSUBA_THRESHOLD = 5 
 
 # ---- Algorithm 1.2 (Addition), for x, y in N -------------------
 def add_mag(x, y, b):
@@ -146,7 +128,9 @@ def mul_mag_school(x, y, b):
 def mul_school(x, y, b):
     """Signed multiplication with the primary school method. x, y are nums, returns a num.
     Multiply the magnitudes with mul_mag_school and adjust the sign (product of the signs)."""
-    ...
+    if x[1] == [0] or y[1] == [0]:                 # a zero factor is trivial (and gives no -0)
+        return (1, [0])
+    return (x[0] * y[0], mul_mag_school(x[1], y[1], b))   # "you simply have to adjust the sign"
 
 # ---- Algorithm 1.5 (Karatsuba) ----------------------------------
 def karatsuba_mag(x, y, n, b):
@@ -155,12 +139,34 @@ def karatsuba_mag(x, y, n, b):
     - Base case (the notes leave it out): if n <= KARATSUBA_THRESHOLD, return mul_mag_school(x, y, b).
     - If n is odd, n <- n + 1; pad x and y with zeros to exactly n digits; split at n/2.
     - The call for (x_hi + x_lo)(y_hi + y_lo) gets wordlength n/2 + 1, because the sums can carry."""
-    ...
+    if n <= KARATSUBA_THRESHOLD:                   # NOTE: the notes leave the base case out; small inputs
+        return mul_mag_school(x, y, b)             #       are multiplied with Algorithm 1.4
+    if n % 2 == 1:                                 # 1.1
+        n = n + 1
+    h = n // 2                                     # n/2
+    x = x + [0] * (n - len(x))                     # leading zero words, so x and y have exactly n words
+    y = y + [0] * (n - len(y))
+    x_lo, x_hi = x[:h], x[h:]                      # 1.2  x = x_hi b^(n/2) + x_lo
+    y_lo, y_hi = y[:h], y[h:]                      #      y = y_hi b^(n/2) + y_lo
+    z2 = karatsuba_mag(x_hi, y_hi, h, b)           # 2.1
+    z0 = karatsuba_mag(x_lo, y_lo, h, b)           # 2.2
+    z1 = karatsuba_mag(add_mag(x_hi, x_lo, b),     # 2.3  NOTE: the sums can have n/2 + 1 words (carry),
+                       add_mag(y_hi, y_lo, b), h + 1, b)          # so this call gets wordlength n/2 + 1
+    z1 = sub_mag(z1, z0, b)                        # 2.3  ... - z0
+    z1 = sub_mag(z1, z2, b)                        # 2.3  ... - z2
+    z = add_mag([0] * n + z2, [0] * h + z1, b)     # 3.1  z2 b^n + z1 b^(n/2)   (shifting = prepending zeros)
+    z = add_mag(z, z0, b)                          # 3.1  ... + z0
+    return z                                       # 3.2
 
 def mul_karatsuba(x, y, b):
     """Signed multiplication with Karatsuba. x, y are nums, returns a num.
     Calls karatsuba_mag with n = the larger of the two lengths, then adjusts the sign (use make_num)."""
-    ...
+    if x[1] == [0] or y[1] == [0]:                 # a zero factor is trivial (and gives no -0)
+        return (1, [0])
+    z = karatsuba_mag(x[1], y[1], max(len(x[1]), len(y[1])), b)
+    while len(z) > 1 and z[-1] == 0:               # Algorithm 1.5 allows leading zero words: remove them
+        z.pop()
+    return (x[0] * y[0], z)
 
 # ---- Algorithm 1.6 (Division with remainder) --------------------
 def divmod_mag(x, y, b):
