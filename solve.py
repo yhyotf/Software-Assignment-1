@@ -16,7 +16,29 @@
 
 # Import built-in json library for handling input/output 
 import json
+DIGITS = "0123456789ABCDEF"
 
+def strip(a):
+    while len(a) > 1 and a[-1] == 0:
+        a.pop()
+    return a
+
+def make_num(sign, mag):
+    mag = strip(mag)
+    if mag == [0]:
+        sign = 1
+    return (sign, mag)
+
+def parse(s):
+    sign = 1
+    if s[0] == "-":
+        sign, s = -1, s[1:]
+    return make_num(sign, [DIGITS.index(ch) for ch in reversed(s)])
+
+def to_string(num):
+    sign, mag = num
+    s = "".join(DIGITS[d] for d in reversed(mag))
+    return "-" + s if sign < 0 else s
 
 
 def solve_exercise(exercise_location: str, answer_location: str):
