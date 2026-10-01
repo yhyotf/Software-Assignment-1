@@ -20,9 +20,9 @@ DIGITS = "0123456789ABCDEF"
 KARATSUBA_THRESHOLD = 5 
 
 def add_mag(x, y, b):
-    """Algorithm 1.2, steps 1.1 - 3.2. x and y are mags (x, y in N), any lengths.
-    Returns the mag x + y. Pad the shorter one with zeros (steps 1.2, 1.3); the carry is 0 or 1;
-    a leftover carry becomes a new top digit (step 3.1)."""
+    """x and y are mags (x, y in N) of any lengths and radix b.
+    Returns the mag x + y. Pad the shorter one with zeros (steps 1.2, 1.3); the carry is 0 or 1.
+    A leftover carry becomes a new top digit."""
     m, n = len(x), len(y)
     c = 0                                          # 1.1
     x = x + [0] * (max(m, n) - m)                  # 1.2  x_i <- 0 for m <= i < max{m,n}
@@ -43,8 +43,8 @@ def add_mag(x, y, b):
     return z[:k]                                   # 3.2
 
 def sub_mag(x, y, b):
-    """Algorithm 1.3, steps 1.1 - 3.3. x and y are mags with x >= y.
-    Returns the mag x - y WITHOUT leading zeros (step 3.2 removes them; the result of 100 - 99 is [1])."""
+    """x and y are mags with x >= y and with radix b.
+    Returns the mag x - y WITHOUT leading zeros."""
     m, n = len(x), len(y)
     c = 0                                          # 1.1
     y = y + [0] * (m - n)                          # 1.2  y_i <- 0 for n <= i < m
@@ -63,7 +63,7 @@ def sub_mag(x, y, b):
 
 def add(x, y, b):
     """Signed addition of two nums. Returns a num.
-    Follow the text of the notes: addition of 0 is trivial; two positives or two negatives -> add_mag and
+    Addition of 0 is trivial; two positives or two negatives -> add_mag and
     keep the sign; a positive and a negative -> subtraction of the two magnitudes (larger minus smaller)
     with the sign of the larger. Equal magnitudes with different signs -> (1, [0])."""
     sx, mx = x
@@ -72,20 +72,20 @@ def add(x, y, b):
         return y
     if my == [0]:
         return x
-    if sx == sy:                                   # two positives: Alg. 1.2
-        return (sx, add_mag(mx, my, b))            # two negatives: Alg. 1.2, "adjusting the sign of the output"
+    if sx == sy:                                   # two positives
+        return (sx, add_mag(mx, my, b))            # two negatives: "adjusting the sign of the output"
     # a positive and a negative number: "equivalent to subtraction of two positive numbers"
     if mx == my:
         return (1, [0])
     if (len(mx), mx[::-1]) > (len(my), my[::-1]):  # |x| > |y|
-        return (sx, sub_mag(mx, my, b))            # Alg. 1.3, sign of the larger
+        return (sx, sub_mag(mx, my, b))            # sign of the larger
     return (sy, sub_mag(my, mx, b))                # "swapping the two numbers and adjusting the sign"
 
 def sub(x, y, b):
     """Signed subtraction x - y of two nums. Returns a num.
-    Follow the text of the notes: subtraction of 0 or from 0 is trivial; different signs -> add the
+    Subtraction of 0 or from 0 is trivial; different signs -> add the
     magnitudes; equal signs -> subtract the magnitudes, swapping them and adjusting the sign when
-    |x| < |y|. Do not just call add(x, neg(y))."""
+    |x| < |y|."""
     sx, mx = x
     sy, my = y
     if my == [0]:                                  # "Subtraction of 0 or from 0 is trivial."
@@ -98,7 +98,7 @@ def sub(x, y, b):
     if mx == my:
         return (1, [0])
     if (len(mx), mx[::-1]) > (len(my), my[::-1]):  # |x| > |y|
-        return (sx, sub_mag(mx, my, b))            # Alg. 1.3
+        return (sx, sub_mag(mx, my, b))            
     return (-sx, sub_mag(my, mx, b))               # swap the two numbers, adjust the sign
 
 def mul_mag_school(x, y, b):
@@ -135,32 +135,32 @@ def mul_school(x, y, b):
     Multiply the magnitudes with mul_mag_school and adjust the sign (product of the signs)."""
     if x[1] == [0] or y[1] == [0]:                 # a zero factor is trivial (and gives no -0)
         return (1, [0])
-    return (x[0] * y[0], mul_mag_school(x[1], y[1], b))   # "you simply have to adjust the sign"
+    return (x[0] * y[0], mul_mag_school(x[1], y[1], b))   # Sign of the result is the product of the signs of the factors.
 
 def karatsuba_mag(x, y, n, b):
-    """Algorithm 1.5, steps 1.1 - 3.2. x and y are mags of at most n digits (leading zero digits allowed).
+    """x and y are mags of at most n digits (leading zero digits allowed) and of radix b.
     Returns the mag x * y (leading zeros allowed).
-    - Base case (the notes leave it out): if n <= KARATSUBA_THRESHOLD, return mul_mag_school(x, y, b).
+    - Base case: if n <= KARATSUBA_THRESHOLD, return mul_mag_school(x, y, b).
     - If n is odd, n <- n + 1; pad x and y with zeros to exactly n digits; split at n/2.
     - The call for (x_hi + x_lo)(y_hi + y_lo) gets wordlength n/2 + 1, because the sums can carry."""
-    if n <= KARATSUBA_THRESHOLD:                   # NOTE: the notes leave the base case out; small inputs
-        return mul_mag_school(x, y, b)             #       are multiplied with Algorithm 1.4
-    if n % 2 == 1:                                 # 1.1
+    if n <= KARATSUBA_THRESHOLD:                   # Base case : if n <= KARATSUBA_THRESHOLD, use the school method
+        return mul_mag_school(x, y, b)             
+    if n % 2 == 1:                                 
         n = n + 1
-    h = n // 2                                     # n/2
-    x = x + [0] * (n - len(x))                     # leading zero words, so x and y have exactly n words
+    h = n // 2                                     
+    x = x + [0] * (n - len(x))                     # adding leading zeros, so x and y have exactly n words
     y = y + [0] * (n - len(y))
-    x_lo, x_hi = x[:h], x[h:]                      # 1.2  x = x_hi b^(n/2) + x_lo
-    y_lo, y_hi = y[:h], y[h:]                      #      y = y_hi b^(n/2) + y_lo
-    z2 = karatsuba_mag(x_hi, y_hi, h, b)           # 2.1
-    z0 = karatsuba_mag(x_lo, y_lo, h, b)           # 2.2
+    x_lo, x_hi = x[:h], x[h:]                      
+    y_lo, y_hi = y[:h], y[h:]                      
+    z2 = karatsuba_mag(x_hi, y_hi, h, b)           
+    z0 = karatsuba_mag(x_lo, y_lo, h, b)           
     z1 = karatsuba_mag(add_mag(x_hi, x_lo, b),     # 2.3  NOTE: the sums can have n/2 + 1 words (carry),
                        add_mag(y_hi, y_lo, b), h + 1, b)          # so this call gets wordlength n/2 + 1
-    z1 = sub_mag(z1, z0, b)                        # 2.3  ... - z0
-    z1 = sub_mag(z1, z2, b)                        # 2.3  ... - z2
-    z = add_mag([0] * n + z2, [0] * h + z1, b)     # 3.1  z2 b^n + z1 b^(n/2)   (shifting = prepending zeros)
-    z = add_mag(z, z0, b)                          # 3.1  ... + z0
-    return z                                       # 3.2
+    z1 = sub_mag(z1, z0, b)                        
+    z1 = sub_mag(z1, z2, b)                        
+    z = add_mag([0] * n + z2, [0] * h + z1, b)     
+    z = add_mag(z, z0, b)                          
+    return z                                       
 
 def mul_karatsuba(x, y, b):
     """Signed multiplication with Karatsuba. x, y are nums, returns a num.
@@ -168,7 +168,7 @@ def mul_karatsuba(x, y, b):
     if x[1] == [0] or y[1] == [0]:                 # a zero factor is trivial (and gives no -0)
         return (1, [0])
     z = karatsuba_mag(x[1], y[1], max(len(x[1]), len(y[1])), b)
-    while len(z) > 1 and z[-1] == 0:               # Algorithm 1.5 allows leading zero words: remove them
+    while len(z) > 1 and z[-1] == 0:               # Removing leading zeros from the result
         z.pop()
     return (x[0] * y[0], z)
 
