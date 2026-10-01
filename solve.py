@@ -11,7 +11,7 @@
 # Yahya Outifa (2247127) 
 # Aly Elakkad (2272121)
 # Spyros Katsileros (2113325)
-# author_name_4 (author_student_ID_4)
+# Oskar Rabenda (2332159)
 ##
 
 # Import built-in json library for handling input/output 
