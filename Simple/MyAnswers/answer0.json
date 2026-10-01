@@ -1,3 +1,5 @@
 {
-    "answer": "32"
+    "answer-a": "-32",
+    "answer-b": "30",
+    "answer-gcd": "1"
 }

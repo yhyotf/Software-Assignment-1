@@ -451,7 +451,7 @@ def solve_exercise(exercise_location: str, answer_location: str):
             results = {"answer": mod_sub(x, operands["y"], m, b)}
         elif op == "multiplication":
             results = {"answer": mod_mul(x, operands["y"], m, b)}
-        else:  # inversion
+        elif op == "inversion":  # inversion
             results = {"answer": mod_inverse(x, m, b)}   # None (no inverse) is written as null
 
     # nums -> strings: reverse the digits back, map them to characters, put the sign in front.
@@ -469,4 +469,4 @@ def solve_exercise(exercise_location: str, answer_location: str):
 
 
 if __name__ == '__main__':
-    solve_exercise('Simple/Exercises/exercise0.json', 'Simple/MyAnswers/answer0.json')
+    solve_exercise('Simple/Exercises/exercise4.json', 'Simple/MyAnswers/answer0.json')
