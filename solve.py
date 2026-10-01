@@ -276,7 +276,7 @@ def mod_reduce(x, m, b):
 
     Args:
         x: num (sign, mag) of any sign. The mag may have leading zeros.
-        m: mag of the modulus. Must not be [0].
+        m: mag of the modulus. Must not be [0] and must not have leading zeros.
         b: the radix, 2 <= b <= 16.
 
     Returns:
@@ -312,7 +312,7 @@ def mod_sub(x, y, m, b):
 
     Args:
         x, y: nums (sign, mag) of any sign.
-        m: mag of the modulus. Must not be [0].
+        m: mag of the modulus. Must not be [0] and must not have leading zeros.
         b: the radix, 2 <= b <= 16.
 
     Returns:
@@ -337,7 +337,7 @@ def mod_mul(x, y, m, b):
 
     Args:
         x, y: nums (sign, mag) of any sign.
-        m: mag of the modulus. Must not be [0].
+        m: mag of the modulus. Must not be [0] and must not have leading zeros.
         b: the radix, 2 <= b <= 16.
 
     Returns:
@@ -360,7 +360,7 @@ def mod_inverse(x, m, b):
 
     Args:
         x: num (sign, mag) of any sign.
-        m: mag of the modulus. Must not be [0].
+        m: mag of the modulus. Must not be [0] and must not have leading zeros.
         b: the radix, 2 <= b <= 16.
 
     Returns:
