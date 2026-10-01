@@ -469,4 +469,4 @@ def solve_exercise(exercise_location: str, answer_location: str):
 
 
 if __name__ == '__main__':
-    solve_exercise('Simple/Exercises/exercise4.json', 'Simple/MyAnswers/answer0.json')
+    solve_exercise('Simple/Exercises/exercise0.json', 'Simple/MyAnswers/answer0.json')
