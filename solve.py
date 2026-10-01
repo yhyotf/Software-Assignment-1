@@ -310,14 +310,30 @@ def mod_reduce(x, m, b):
     return (1, r)
 
 def mod_add(x, y, m, b):
-    """Algorithm 2.7. x and y are nums (any sign), m is a mag != [0]. Returns the num (x + y) mod m in [0, m).
-    Reduce x and y first, then z' = x + y, and subtract m once if z' >= m."""
-    xr = mod_reduce(x, m, b)                       #      reduce first: 0 <= x', y' < m
+    """Compute (x + y) mod m (Algorithm 2.7).
+
+    Args:
+        x, y: nums (sign, mag) of any sign.
+        m: mag of the modulus. Must not be [0] and must not have leading zeros.
+        b: the radix, 2 <= b <= 16.
+
+    Returns:
+        The num (1, z) with 0 <= z < m and z = x + y (mod m).
+
+    Raises:
+        Nothing; the inputs are not checked. m = [0] makes it loop forever (solve_exercise answers null instead).
+
+    Note:
+        Algorithm 2.7 assumes 0 <= x, y < m, but the assignment allows any integer, so x and y are reduced
+        first. Then z' = x' + y' lies in [0, 2m - 1), and subtracting m once when z' >= m is enough. Both
+        x' and y' are non-negative, so the magnitudes are added directly with add_mag.
+    """
+    xr = mod_reduce(x, m, b)
     yr = mod_reduce(y, m, b)
-    z = add_mag(xr[1], yr[1], b)                   # 1.1  z' <- x' + y'  (lies in [0, 2m - 1))
-    if (len(z), z[::-1]) >= (len(m), m[::-1]):     # 2.1  z' >= m: subtract m once
+    z = add_mag(xr[1], yr[1], b)
+    if (len(z), z[::-1]) >= (len(m), m[::-1]):
         z = sub_mag(z, m, b)
-    return (1, z)                                  # 2.2
+    return (1, z)
 
 def mod_sub(x, y, m, b):
     """Compute (x - y) mod m (Algorithm 2.8).
