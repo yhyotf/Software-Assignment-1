@@ -212,12 +212,24 @@ def divmod_mag(x, y, b):
     return q, r
 
 def ext_euclid(x, y, b):
-    """Algorithm 2.2, steps 1.1 - 3.4. x and y are nums, not both zero.
-    Returns (d, u, v): three nums with d = gcd(x, y) >= 0 and u*x + v*y = d.
-    Follow the notes exactly (Bezout coefficients are not unique, the grader expects those of Algorithm 2.2):
-    work on |x| and |y|, get q and r from divmod_mag, update the coefficients with the signed mul and sub,
-    and fix the signs of u and v at the end (steps 3.2, 3.3).
-    Check: ext_euclid(96, 40) -> d = 8, u = -2, v = 5."""
+    """Compute the gcd(x,y) and provide Bezout coefficients (u and v) (Algorithm 2.2, steps 1.1 - 3.4).
+    Args:
+        x: num (sign, mag) of any sign. Mag without leading zeros
+        y: num (sign, mag) of any sign. Mag without leading zeros
+            x and y are not both zero.
+        b: the radix, 2 <= b <= 16.
+    
+    Returns:
+        (d, u, v): three nums without leading zeros, with d = gcd(x, y) >= 0
+        and u*x + v*y = d.
+    
+    Raises:
+        Nothing. The inputs are not checked. If x and y are both zero (excluded by spec), the loop is skipped and (0,1,0) is returned.
+
+    Note:
+        The loop runs on |x| and |y|. At the end, the sign of u is flipped if x was negative, and the sign of v if y was negative (zero is never flipped,
+        so -0 cannot occur).
+    """
     x_sign,x_mag = x 
     y_sign,y_mag = y
 
